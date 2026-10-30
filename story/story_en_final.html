@@ -114,7 +114,7 @@ window.__run=()=>{ draws.forEach(([n,f])=>document.querySelectorAll('[data-draw=
       <li><a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1410008601" target="_blank" rel="noopener">Table 14-10-0086</a>: immigrants by educational attainment, 3-month moving average.</li>
       <li><a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1410001901" target="_blank" rel="noopener">Table 14-10-0019</a>: population by educational attainment, monthly, not seasonally adjusted; here, 12-month average.</li>
     </ul>
-    <p>Each series was requested separately from the StatCan API and checked to be the series asked for. Before charting, these checks passed: total immigrants fall between their subgroups; total population falls between Canadian-born and immigrants; the education table's total rate matches the official seasonally adjusted rate for ages 25 to 54 over the same 12-month average; and the April to June 2026 ratio matches the official second-quarter figure. Every number on this page comes from that data, and the readings are computed from it. Data snapshot taken on October 30, 2026.</p>
+    <p>Each series was requested separately from the StatCan API and checked to be the series asked for. Two consistency checks were run on the data: the immigrant total always falls between its time-in-Canada subgroups (all 120 months and every education level), and the April to June 2026 vacancy ratio matches the official second-quarter figure. Every number on this page comes from that data, and the readings are computed from it. Data snapshot taken on October 30, 2026.</p>
     <p>Open data from Statistics Canada (Statistics Canada Open Licence). Analysis at antonionino.com.</p>
   </footer>
 </div>
