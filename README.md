@@ -1,58 +1,51 @@
-# statcan-labour-lab
+# How much does a degree protect in Canada?
 
-Cruces de mercado laboral con tablas abiertas de Statistics Canada, en DuckDB + pandas.
+An analytics story built by crossing Statistics Canada open datasets, not by charting one table.
 
-## Uso
+**Live app:** deployed on Streamlit Community Cloud from this repo (main file: `app/streamlit_app.py`).
 
-```bash
-pip install -e .
-python -m statcan_lab freshness        # rango de fechas y release de cada tabla (WDS)
-python -m statcan_lab fetch            # baja las 4 tablas completas y las carga a data/statcan.duckdb
-python -m statcan_lab describe 14-10-0471-01   # dimensiones y valores reales de una tabla
-python -m statcan_lab run ei_gap       # EI regular por desempleado, por provincia y mes
-python -m statcan_lab run immigrant_gap  # brecha de desempleo por estatus migratorio vs nacidos en Canada
-python -m statcan_lab run degree_ratio # desempleados por vacante segun nivel educativo
-python -m statcan_lab run explore      # panel provincia x mes, correlacion con rezagos, outliers
+## What it shows
+
+1. **Pressure:** unemployed people per job vacancy, April 2015 to August 2026 (Tables 14-10-0287 and 14-10-0432).
+2. **Who feels it first:** unemployment by years living in Canada (Table 14-10-0471).
+3. **The cross:** does the gap between recent immigrants and Canadian-born workers close when the market tightens?
+4. **Same education, different origin:** unemployment by education level and immigrant group, ages 25 to 54 (Table 14-10-0086).
+5. **Where the gap opens:** a heatmap of gaps by education level and time in Canada.
+
+Headline reading (snapshot, September 2026): with a university degree, unemployment is 6.0% among immigrants and 3.5% among Canadian-born workers. The 6.0% is above the 4.4% of a Canadian-born worker with a college or trades diploma. Every figure on the page is computed from the data files, not typed in.
+
+## Method and limits
+
+- Each series is requested one at a time from the StatCan Web Data Service and checked to be the series asked for (coordinate echo).
+- Checks before charting: immigrant total sits between its subgroups; total population sits between Canadian-born and immigrants; the education table's total rate matches the official rate over the same period; the April to June 2026 vacancy ratio matches the official Q2 figure.
+- Vacancy data has a gap from April to September 2020 in all StatCan vacancy tables checked; the charts show it as a gap, not an interpolation.
+- Surveys carry sampling error and Table 14-10-0086 publishes the estimate only. Read patterns, not decimals.
+- The analysis does not control for age, region, language or occupation. It shows gaps, not causes.
+- The page is a static snapshot (`data/*.json`, embedded in `story/story_en.html`). It does not refresh automatically.
+
+## Repo layout
+
+```
+app/streamlit_app.py     Streamlit entry point (embeds the story page)
+app/legacy_explorer.py   earlier explorer on synthetic demo data (not deployed)
+story/story_en.html      self-contained page (d3 + data inlined)
+data/                    JSON snapshot used by the page
+published_demo/, src/, tests/, notebooks/   earlier groundwork
 ```
 
-Resultados en `out/*.csv` (listos para Power BI o Looker Studio).
-
-## App web (Streamlit) y refresco automatico
-
-- `app/streamlit_app.py` lee los CSV de `published/` y nunca llama a StatCan en vivo.
-- `python -m statcan_lab publish` baja datos frescos y regenera `published/` (con meta.json de frescura y errores).
-- `.github/workflows/refresh.yml` corre ese comando cada lunes en GitHub Actions y hace commit si hay cambios.
-- `published_demo/` trae datos SINTETICOS para ver la app antes de tener datos reales. La app muestra un
-  banner rojo cuando los usa. Cuando exista `published/`, la app usa esa carpeta y ya no muestra el demo
-  (puedes borrar `published_demo/`).
-
-Despliegue en Streamlit Community Cloud: repositorio `<usuario>/statcan-labour-lab`, branch `main`,
-main file path `app/streamlit_app.py`. Primer refresco real: GitHub, pestana Actions, "Refresh StatCan data", "Run workflow".
-
-## Antes de confiar en los resultados
-
-El entorno donde se escribio este codigo no tenia acceso a StatCan, asi que se probo con datos
-sinteticos que imitan el formato de las descargas (`tests/`). Lo que eso valida: la carga, la
-conversion de escala (miles a personas), los filtros, los cruces y la deteccion de rezagos.
-Lo que NO valida: los nombres exactos de dimensiones y categorias de las tablas reales.
-
-1. Corre `fetch` y luego `describe` en cada tabla.
-2. Ajusta los regex de `src/statcan_lab/config.py` a lo que veas.
-3. Si un filtro no coincide, el codigo falla con la lista de valores disponibles (no suma categorias por accidente).
-
-Puntos a verificar en particular: `14-10-0287-03` (se asume provincia sin sexo/edad), la categoria
-"Born in Canada" y los nombres de grupos migratorios en `14-10-0471-01`, y las dimensiones de
-`14-10-0443-01` (el analisis `degree_ratio` es el menos seguro).
-
-## Tests
+## Run locally
 
 ```bash
-PYTHONPATH=src:tests python -m unittest discover -s tests -v
+pip install -r requirements.txt
+streamlit run app/streamlit_app.py
 ```
 
-## Lecturas con cuidado
+Or just open `story/story_en.html` in a browser.
 
-- `ei_per_unemployed` no es una tasa de cobertura: beneficiarios (semana de referencia, administrativo)
-  y desempleados (LFS, incluye gente que nunca trabajo o no califica) miden cosas distintas.
-- Las correlaciones del panel son descriptivas. Con tablas separadas no hay causalidad.
-- `14-10-0471-01` es media movil de 3 meses sin ajuste estacional; el resto es ajustado. Sirve para brechas y tendencias, no para comparar niveles mes a mes.
+## Deploy
+
+Streamlit Community Cloud: repo `antonioninocol/stats-canada-b-cases`, branch `main`, main file `app/streamlit_app.py`. It redeploys on every push to `main`.
+
+## Sources
+
+Statistics Canada, tables 14-10-0287, 14-10-0432, 14-10-0471, 14-10-0086, 14-10-0019. Contains information licensed under the Statistics Canada Open Licence.
